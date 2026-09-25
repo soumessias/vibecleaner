@@ -71,6 +71,7 @@ private struct CandidateGroup: Identifiable {
 }
 
 struct MenuBarView: View {
+    var onConfirmationChange: (Bool) -> Void = { _ in }
     @EnvironmentObject private var store: CleanerStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var selectedFilter: MenuFilter = .all
@@ -168,6 +169,8 @@ struct MenuBarView: View {
             .environmentObject(store)
             .frame(width: 430, height: 480)
         }
+        .onChange(of: showingConfirmation, perform: onConfirmationChange)
+        .task { await store.scanIfStale() }
     }
 
     private var header: some View {

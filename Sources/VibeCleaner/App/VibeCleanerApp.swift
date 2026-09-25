@@ -18,6 +18,7 @@ import SwiftUI
 @main
 @MainActor
 struct VibeCleanerApp: App {
+    @NSApplicationDelegateAdaptor(MenuBarController.self) private var menuBarController
     @StateObject private var store: CleanerStore
     @StateObject private var loginItemManager: LoginItemManager
 
@@ -30,26 +31,6 @@ struct VibeCleanerApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra {
-            MenuBarView()
-                .environmentObject(store)
-                .task { await store.scanIfStale() }
-        } label: {
-            HStack(spacing: 5) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 15, weight: .medium))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(VibePalette.accent)
-                    .frame(width: 18, height: 18)
-                    .accessibilityHidden(true)
-                Text(verbatim: store.menuBarValue.isEmpty ? "VC" : store.menuBarValue)
-                    .font(.system(size: 13, weight: .medium))
-                    .monospacedDigit()
-            }
-            .accessibilityLabel(VibeStrings.value("VibeCleaner menu bar item"))
-        }
-        .menuBarExtraStyle(.window)
-
         Settings {
             SettingsRootView()
                 .environmentObject(store)
