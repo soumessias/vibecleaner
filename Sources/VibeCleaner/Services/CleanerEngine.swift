@@ -33,6 +33,18 @@ enum CleanerEngine {
         let relativePath: String
     }
 
+    private struct TestDevice {
+        let id: UUID
+        let name: String
+        let path: URL
+        let state: String
+        let isAvailable: Bool
+    }
+
+    private static let testDeviceRoot = FileManager.default.homeDirectoryForCurrentUser
+        .appending(path: "Library/Developer/XCTestDevices", directoryHint: .isDirectory)
+        .standardizedFileURL
+
     private static let catalog: [CatalogEntry] = [
         CatalogEntry(
             id: "xcode-derived-data",
@@ -83,6 +95,30 @@ enum CleanerEngine {
             relativePath: ".npm/_cacache"
         ),
         CatalogEntry(
+            id: "npm-npx-cache",
+            nameKey: "npx temporary packages",
+            detailKey: "Packages installed by npx; review if a command is still running.",
+            group: .packages,
+            safety: .review,
+            relativePath: ".npm/_npx"
+        ),
+        CatalogEntry(
+            id: "playwright-browsers",
+            nameKey: "Playwright browsers",
+            detailKey: "Downloaded test browsers; Playwright can install them again.",
+            group: .packages,
+            safety: .review,
+            relativePath: "Library/Caches/ms-playwright"
+        ),
+        CatalogEntry(
+            id: "puppeteer-browsers",
+            nameKey: "Puppeteer browsers",
+            detailKey: "Downloaded test browsers; Puppeteer can install them again.",
+            group: .packages,
+            safety: .review,
+            relativePath: ".cache/puppeteer"
+        ),
+        CatalogEntry(
             id: "yarn-cache",
             nameKey: "Yarn cache",
             detailKey: "Downloaded package data; Yarn can fetch it again.",
@@ -115,14 +151,6 @@ enum CleanerEngine {
             relativePath: ".pub-cache"
         ),
         CatalogEntry(
-            id: "xcode-test-devices",
-            nameKey: "Xcode test devices",
-            detailKey: "Test simulator clones; manage them in Xcode after tests finish.",
-            group: .xcode,
-            safety: .managed,
-            relativePath: "Library/Developer/XCTestDevices"
-        ),
-        CatalogEntry(
             id: "xcode-simulator-devices",
             nameKey: "Simulator devices",
             detailKey: "Installed simulators and their app data; manage them in Xcode.",
@@ -153,11 +181,35 @@ enum CleanerEngine {
             group: .android,
             safety: .managed,
             relativePath: "Library/Android/sdk"
+        ),
+        CatalogEntry(
+            id: "android-virtual-devices",
+            nameKey: "Android virtual devices",
+            detailKey: "Emulators contain apps and settings; manage them in Android Studio.",
+            group: .android,
+            safety: .managed,
+            relativePath: ".android/avd"
+        ),
+        CatalogEntry(
+            id: "ollama-models",
+            nameKey: "Ollama models",
+            detailKey: "Downloaded AI models; these are not disposable logs.",
+            group: .ai,
+            safety: .managed,
+            relativePath: ".ollama/models"
+        ),
+        CatalogEntry(
+            id: "huggingface-cache",
+            nameKey: "Hugging Face model cache",
+            detailKey: "Downloaded model snapshots; review if you need them offline.",
+            group: .ai,
+            safety: .review,
+            relativePath: ".cache/huggingface/hub"
         )
     ]
 
     static var cleanerIDs: [String] {
-        catalog.map(\.id) + ["temporary-builds"]
+        catalog.map(\.id) + ["xcode-test-devices", "project-derived-data", "temporary-builds"]
     }
 
     static func defaultEnabledIDs() -> Set<String> {
@@ -182,6 +234,16 @@ enum CleanerEngine {
     static func cleanerSettings() -> [CleanerSetting] {
         let builtIn = catalog.map { CleanerSetting(id: $0.id, nameKey: $0.nameKey, detailKey: $0.detailKey, group: $0.group) }
         return builtIn + [CleanerSetting(
+            id: "xcode-test-devices",
+            nameKey: "Xcode test devices",
+            detailKey: "Inactive test clones are review-only; active or recent devices stay protected.",
+            group: .xcode
+        ), CleanerSetting(
+            id: "project-derived-data",
+            nameKey: "Project Derived Data",
+            detailKey: "Generated Xcode data inside project .build folders in Documents.",
+            group: .xcode
+        ), CleanerSetting(
             id: "temporary-builds",
             nameKey: "Temporary build folders",
             detailKey: "Matching folders directly inside /private/tmp; always review before cleaning.",
@@ -214,6 +276,14 @@ enum CleanerEngine {
                 path: url.path,
                 bytes: measured
             ))
+        }
+
+        if enabledIDs.contains("xcode-test-devices") {
+            candidates += scanTestDevices(excluded: normalizedExclusions, warnings: &warnings)
+        }
+
+        if enabledIDs.contains("project-derived-data") {
+            candidates += scanProjectDerivedData(excluded: normalizedExclusions, warnings: &warnings)
         }
 
         if enabledIDs.contains("temporary-builds") {
@@ -311,16 +381,24 @@ enum CleanerEngine {
             publish(currentID: candidate.id, force: true)
             guard candidate.safety != .managed,
                   isAuthorized(candidate, normalizedCustomPaths: normalizedCustomPaths),
-                  !isExcluded(url.path, by: exclusions), isInspectableDirectory(url) else {
+                  !isExcluded(url.path, by: exclusions),
+                  !(candidate.origin == .testDevice && containsExcludedDescendant(url.path, exclusions: exclusions)),
+                  isInspectableDirectory(url) else {
                 problems.append(CleanProblem(path: candidate.path, message: "This location is no longer available or is outside the cleanup catalog."))
                 completedCount += 1
                 publish(currentID: nil, force: true)
                 continue
             }
             do {
-                try removeContents(at: url, excluded: exclusions) { amount in
-                    removedBytes += amount
+                if candidate.origin == .testDevice {
+                    try deleteTestDevice(candidate)
+                    removedBytes += candidate.bytes
                     publish(currentID: candidate.id)
+                } else {
+                    try removeContents(at: url, excluded: exclusions) { amount in
+                        removedBytes += amount
+                        publish(currentID: candidate.id)
+                    }
                 }
                 cleanedIDs.append(candidate.id)
             } catch {
@@ -348,7 +426,171 @@ enum CleanerEngine {
             return normalizedCustomPaths.contains(candidate.url.path)
                 && isAllowedCustomPath(candidate.url.path)
                 && candidate.safety == .review
+        case .testDevice:
+            return isReviewableTestDevice(candidate)
+        case .projectDerivedData:
+            return candidate.safety == .review && isAllowedProjectDerivedData(candidate.url)
         }
+    }
+
+    private static func scanTestDevices(excluded: [String], warnings: inout [String]) -> [CleanupCandidate] {
+        guard isInspectableDirectory(testDeviceRoot), !isExcluded(testDeviceRoot.path, by: excluded) else { return [] }
+        guard let devices = listedTestDevices() else {
+            let bytes = directorySize(at: testDeviceRoot, excluded: excluded, warnings: &warnings)
+            guard bytes > 0 else { return [] }
+            return [CleanupCandidate(
+                id: "xcode-test-devices-unavailable",
+                nameKey: "Xcode test devices",
+                detailKey: "Test clones could not be verified; open Xcode to manage them.",
+                group: .xcode,
+                safety: .managed,
+                origin: .testDevice,
+                path: testDeviceRoot.path,
+                bytes: bytes
+            )]
+        }
+
+        var candidates: [CleanupCandidate] = []
+        for device in devices {
+            guard isInspectableDirectory(device.path), !isExcluded(device.path.path, by: excluded) else { continue }
+            let bytes = directorySize(at: device.path, excluded: excluded, warnings: &warnings)
+            guard bytes > 0 else { continue }
+            let canReview = isOldInactiveClone(device) && !containsExcludedDescendant(device.path.path, exclusions: excluded)
+            candidates.append(CleanupCandidate(
+                id: "xctest-device:\(device.id.uuidString)",
+                nameKey: "\(device.name) · \(device.id.uuidString.prefix(8))",
+                detailKey: canReview
+                    ? "Inactive test clone; removing it also removes its installed apps and test state."
+                    : "Recent or active test device; kept under Xcode management.",
+                group: .xcode,
+                safety: canReview ? .review : .managed,
+                origin: .testDevice,
+                path: device.path.path,
+                bytes: bytes
+            ))
+        }
+        return candidates
+    }
+
+    private static func listedTestDevices() -> [TestDevice]? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = ["simctl", "--set", testDeviceRoot.path, "list", "devices", "-j"]
+        let output = Pipe()
+        process.standardOutput = output
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+            let data = output.fileHandleForReading.readDataToEndOfFile()
+            process.waitUntilExit()
+            guard process.terminationStatus == 0,
+                  let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let groups = json["devices"] as? [String: [[String: Any]]] else { return nil }
+            return groups.values.flatMap { $0 }.compactMap { record in
+                guard let idString = record["udid"] as? String,
+                      let id = UUID(uuidString: idString),
+                      let name = record["name"] as? String,
+                      let state = record["state"] as? String,
+                      let isAvailable = record["isAvailable"] as? Bool,
+                      let dataPath = record["dataPath"] as? String else { return nil }
+                let path = testDeviceRoot.appending(path: id.uuidString, directoryHint: .isDirectory).standardizedFileURL
+                guard dataPath == path.appending(path: "data").path else { return nil }
+                return TestDevice(id: id, name: name, path: path, state: state, isAvailable: isAvailable)
+            }
+        } catch {
+            return nil
+        }
+    }
+
+    private static func isOldInactiveClone(_ device: TestDevice) -> Bool {
+        guard device.name.hasPrefix("Clone "), device.state == "Shutdown", device.isAvailable,
+              isInspectableDirectory(device.path),
+              let folderValues = try? device.path.resourceValues(forKeys: [.creationDateKey, .contentModificationDateKey]) else { return false }
+        // CoreSimulator may update every data directory together while mounting runtimes.
+        // The device directory itself gives a more useful guard against newly created clones.
+        let latestActivity = [folderValues.creationDate, folderValues.contentModificationDate].compactMap { $0 }.max() ?? .now
+        return Date().timeIntervalSince(latestActivity) >= 24 * 60 * 60
+    }
+
+    private static func isReviewableTestDevice(_ candidate: CleanupCandidate) -> Bool {
+        guard candidate.safety == .review,
+              let idString = candidate.id.split(separator: ":").last,
+              let id = UUID(uuidString: String(idString)),
+              candidate.path == testDeviceRoot.appending(path: id.uuidString).standardizedFileURL.path,
+              let device = listedTestDevices()?.first(where: { $0.id == id }) else { return false }
+        return isOldInactiveClone(device)
+    }
+
+    private static func deleteTestDevice(_ candidate: CleanupCandidate) throws {
+        guard isReviewableTestDevice(candidate),
+              let idString = candidate.id.split(separator: ":").last,
+              let id = UUID(uuidString: String(idString)) else {
+            throw NSError(domain: "VibeCleaner", code: 1, userInfo: [NSLocalizedDescriptionKey: "The test device changed since the scan. Scan again before cleaning."])
+        }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = ["simctl", "--set", testDeviceRoot.path, "delete", id.uuidString]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw NSError(domain: "VibeCleaner", code: 2, userInfo: [NSLocalizedDescriptionKey: "Xcode could not remove this test device. Try again after closing tests."])
+        }
+    }
+
+    private static func scanProjectDerivedData(excluded: [String], warnings: inout [String]) -> [CleanupCandidate] {
+        let root = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Documents", directoryHint: .isDirectory).standardizedFileURL
+        guard isInspectableDirectory(root), !isExcluded(root.path, by: excluded) else { return [] }
+        var queue: [(URL, Int)] = [(root, 0)]
+        var candidates: [CleanupCandidate] = []
+        var visited = 0
+        while !queue.isEmpty && visited < 5000 {
+            let (directory, depth) = queue.removeFirst()
+            visited += 1
+            guard let children = try? FileManager.default.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
+                options: []
+            ) else { continue }
+            for child in children where isInspectableDirectory(child) && !isExcluded(child.path, by: excluded) {
+                if child.lastPathComponent == ".build" {
+                    guard let artifacts = try? FileManager.default.contentsOfDirectory(
+                        at: child,
+                        includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
+                        options: []
+                    ) else { continue }
+                    for artifact in artifacts where isAllowedProjectDerivedData(artifact) && !isExcluded(artifact.path, by: excluded) {
+                        let bytes = directorySize(at: artifact, excluded: excluded, warnings: &warnings)
+                        guard bytes > 0 else { continue }
+                        candidates.append(CleanupCandidate(
+                            id: "project-derived:\(artifact.path)",
+                            nameKey: "\(directory.lastPathComponent) / \(artifact.lastPathComponent)",
+                            detailKey: "Generated project build data; verify no build is running.",
+                            group: .xcode,
+                            safety: .review,
+                            origin: .projectDerivedData,
+                            path: artifact.standardizedFileURL.path,
+                            bytes: bytes
+                        ))
+                    }
+                } else if depth < 5 && !child.lastPathComponent.hasPrefix(".")
+                            && !["node_modules", "Pods", "vendor", "dist", "build"].contains(child.lastPathComponent) {
+                    queue.append((child, depth + 1))
+                }
+            }
+        }
+        return candidates
+    }
+
+    private static func isAllowedProjectDerivedData(_ url: URL) -> Bool {
+        let root = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Documents", directoryHint: .isDirectory).standardizedFileURL
+        let standardized = url.standardizedFileURL
+        let name = standardized.lastPathComponent.lowercased()
+        guard isInspectableDirectory(standardized), standardized.deletingLastPathComponent().lastPathComponent == ".build",
+              name == "deriveddata" || name.hasSuffix("deriveddata") || name.hasSuffix("-derived"),
+              isSameOrDescendant(standardized.path, of: root.path) else { return false }
+        return isSameOrDescendant(standardized.resolvingSymlinksInPath().path, of: root.resolvingSymlinksInPath().path)
     }
 
     private static func isTemporaryBuildFolder(_ url: URL) -> Bool {

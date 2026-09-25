@@ -39,7 +39,7 @@ final class CleanerStore: ObservableObject {
     private let defaults = UserDefaults.standard
     private let candidatesKey = "cachedCandidates"
     private let hasSelectionKey = "hasSavedSelection"
-    private let scanCatalogVersion = 3
+    private let scanCatalogVersion = 4
     private var cleanupProgressSequence = 0
 
     private init() {
@@ -50,6 +50,14 @@ final class CleanerStore: ObservableObject {
         customPaths = defaults.stringArray(forKey: "customPaths") ?? []
         excludedPaths = defaults.stringArray(forKey: "excludedPaths") ?? []
         lastScanDate = defaults.object(forKey: "lastScanDate") as? Date
+
+        if storedEnabled != nil && defaults.integer(forKey: "scanCatalogVersion") < 4 {
+            enabledCleanerIDs.formUnion([
+                "npm-npx-cache", "playwright-browsers", "puppeteer-browsers",
+                "android-virtual-devices", "ollama-models", "huggingface-cache", "project-derived-data"
+            ])
+            defaults.set(Array(enabledCleanerIDs), forKey: "enabledCleanerIDs")
+        }
 
         if let data = defaults.data(forKey: candidatesKey),
            let decoded = try? JSONDecoder().decode([CleanupCandidate].self, from: data) {

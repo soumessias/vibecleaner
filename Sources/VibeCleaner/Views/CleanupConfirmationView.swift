@@ -36,7 +36,10 @@ struct CleanupConfirmationView: View {
     }
 
     private var touchesBuildCaches: Bool {
-        candidates.contains { ["xcode-derived-data", "xcode-module-cache", "xcode-cache", "gradle-cache"].contains($0.id) }
+        candidates.contains {
+            ["xcode-derived-data", "xcode-module-cache", "xcode-cache", "gradle-cache"].contains($0.id)
+                || $0.origin == .testDevice || $0.origin == .projectDerivedData
+        }
     }
 
     var body: some View {
@@ -101,7 +104,7 @@ struct CleanupConfirmationView: View {
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                 }
-                VibeText("Archives and simulator data are not included. Custom and temporary folders are shown with their full paths.")
+                VibeText("Archives and regular simulators stay protected. Selected test clones lose their installed apps and test state.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Sources/VibeCleaner/Resources/VibeCleanerLogo.png" alt="Logo do VibeCleaner: uma vassoura azul" width="116">
+  <a href="Sources/VibeCleaner/Resources/VibeCleanerLogo.png"><img src="Sources/VibeCleaner/Resources/VibeCleanerLogo.png" alt="VibeCleaner: vassoura azul e lilás" width="112"></a>
 </p>
 
 <h1 align="center">VibeCleaner</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  macOS 13+ · SwiftUI · Português / English · <a href="LICENSE">Apache License 2.0</a>
+  macOS 13+ &nbsp;·&nbsp; SwiftUI nativo &nbsp;·&nbsp; Português / English &nbsp;·&nbsp; <a href="LICENSE">Apache 2.0</a>
 </p>
 
 <p align="center">
@@ -21,11 +21,14 @@ VibeCleaner mostra quanto espaço caches e arquivos temporários de desenvolvime
 
 ## Capturas de tela · Screenshots
 
-Capturas reais da versão atual no macOS. Os valores mudam conforme os arquivos de cada Mac. / Real captures of the current macOS app; amounts vary by machine.
+Capturas reais no macOS. Os valores variam conforme os arquivos de cada Mac. / Real macOS captures; amounts vary by machine.
 
-| Barra de menus / Menu bar | Ajustes / Settings |
-| :---: | :---: |
-| [![Painel do VibeCleaner com espaço encontrado, categorias e botão de limpeza](docs/screenshots/menu-bar.png)](docs/screenshots/menu-bar.png) | [![Ajustes do VibeCleaner com opções de inicialização e análise](docs/screenshots/settings.png)](docs/screenshots/settings.png) |
+<p align="center">
+  <a href="docs/screenshots/menu-bar.png"><img src="docs/screenshots/menu-bar.png" alt="Painel do VibeCleaner com categorias, espaço encontrado e botão de limpeza" width="390"></a>
+  &nbsp;&nbsp;
+  <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Ajustes do VibeCleaner com opções de inicialização, idioma e análise" width="550"></a>
+</p>
+<p align="center"><sub>Painel da barra de menus · Ajustes / Menu bar panel · Settings</sub></p>
 
 > **Estado do projeto:** versão inicial disponível para compilar a partir do código. Ainda não há instalador público assinado com Developer ID nem app notarizado.
 
@@ -34,7 +37,7 @@ Capturas reais da versão atual no macOS. Os valores mudam conforme os arquivos 
 ### O que o app faz
 
 - Fica na barra de menus, sem janela permanente ou serviço pesado em segundo plano.
-- Mede locais conhecidos de Xcode, Android/Gradle, gerenciadores de pacotes, Swift e Dart, além de algumas pastas temporárias de build.
+- Mede locais conhecidos de Xcode, Android/Gradle, gerenciadores de pacotes, Swift e Dart, além de builds temporários e Derived Data dentro de projetos em Documentos.
 - Mostra cada caminho e tamanho, com filtros por categoria e uma confirmação antes da limpeza.
 - Permite selecionar ou desmarcar todos os itens da lista de revisão e acompanha a limpeza com progresso e resultado visíveis.
 - Permite ativar ou desativar fontes de análise, adicionar pastas específicas para revisão e excluir caminhos da análise e da limpeza.
@@ -45,8 +48,8 @@ Capturas reais da versão atual no macOS. Os valores mudam conforme os arquivos 
 | Grupo | O que significa | Limpeza pelo VibeCleaner |
 | --- | --- | --- |
 | **Pronto para limpar** | Caches conhecidos e recriáveis, como Derived Data do Xcode e cache do Gradle. | Selecionados por padrão; você pode desmarcar. |
-| **Revisar** | Builds temporários, alguns stores de pacotes e pastas adicionadas por você. | Desmarcados por padrão; confira o caminho antes de selecionar. |
-| **Gerenciado pelas ferramentas** | Simuladores, dispositivos de teste, archives, suporte de dispositivos e SDK Android. | Somente consulta; o app não seleciona nem apaga. |
+| **Revisar** | Builds temporários, Derived Data em projetos, clones antigos e desligados de teste, alguns caches e pastas adicionadas por você. | Desmarcados por padrão; confira o caminho antes de selecionar. Clones de teste são removidos pelo `simctl` do Xcode. |
+| **Gerenciado pelas ferramentas** | Simuladores comuns, dispositivos de teste recentes ou ativos, archives, suporte de dispositivos, SDK e emuladores Android e modelos de IA. | Somente consulta; o app não seleciona nem apaga. |
 
 O total de **armazenamento de desenvolvimento encontrado** soma os três grupos. Ele **não** é a promessa de espaço que o botão Limpar vai liberar. O valor do botão corresponde apenas aos itens selecionados para limpeza. O número na barra de menus representa o espaço **pronto para limpar**. Tamanhos de `~/Library/Developer`, `~/Library/Android` ou `/private/tmp` medidos por outras ferramentas podem incluir dados que ficam fora do catálogo do VibeCleaner.
 
@@ -67,7 +70,7 @@ O script cria um app universal para Macs com Apple silicon e Intel em `dist/`. A
 
 O VibeCleaner não usa `sudo`. Ele valida novamente os caminhos antes de apagar, respeita exclusões e pede confirmação com a lista de itens selecionados. Pastas temporárias e personalizadas podem conter arquivos importantes: confira o caminho e o conteúdo antes de marcá-las. Feche builds e ferramentas que estejam usando esses arquivos. Após a limpeza, alguns caches terão de ser baixados ou gerados novamente.
 
-Archives, simuladores, dispositivos de teste e SDKs aparecem para você entender onde está o espaço, mas continuam sob o controle do Xcode ou Android Studio. O app também não faz uma limpeza genérica de `~/Library`, `/private/tmp` ou documentos pessoais.
+Archives, simuladores comuns, dispositivos de teste recentes, SDKs, emuladores e modelos de IA aparecem para você entender onde está o espaço, mas continuam sob o controle das ferramentas. Clones de teste antigos só podem ser selecionados após revisão e perdem os apps e o estado de testes ao serem removidos. O app também não faz uma limpeza genérica de `~/Library`, `/private/tmp` ou documentos pessoais.
 
 ### Contribuir e licença
 
@@ -86,7 +89,7 @@ VibeCleaner is a lightweight native macOS menu bar app. It measures developer ca
 ### What it does
 
 - Lives in the menu bar without a permanent window or heavy background service.
-- Measures known Xcode, Android/Gradle, package manager, Swift and Dart locations, plus selected temporary build folders.
+- Measures known Xcode, Android/Gradle, package manager, Swift and Dart locations, plus temporary builds and project Derived Data in Documents.
 - Shows each path and size, category filters, and a confirmation step before cleanup.
 - Lets you select or deselect the review queue at once and keeps cleanup progress and results visible.
 - Lets you enable or disable scan sources, add specific folders for review, and exclude paths from scanning and cleanup.
@@ -97,8 +100,8 @@ VibeCleaner is a lightweight native macOS menu bar app. It measures developer ca
 | Group | Meaning | Cleanup in VibeCleaner |
 | --- | --- | --- |
 | **Ready to clean** | Known regenerable caches, such as Xcode Derived Data and Gradle cache. | Selected by default; you can deselect them. |
-| **Review** | Temporary builds, some package stores, and folders you add. | Deselected by default; inspect each path before selecting it. |
-| **Managed by tools** | Simulators, test devices, archives, device support, and the Android SDK. | View only; the app never selects or deletes them. |
+| **Review** | Temporary builds, project Derived Data, old shut down test clones, some caches, and folders you add. | Deselected by default; inspect each path before selecting it. Test clones are removed through Xcode's `simctl`. |
+| **Managed by tools** | Regular simulators, recent or active test devices, archives, device support, Android SDK and emulators, and AI models. | View only; the app never selects or deletes them. |
 
 The **development storage found** total includes all three groups. It is **not** the amount the Clean button will recover. The button shows only the selected cleanup items. The menu bar value shows **ready-to-clean** space. Totals for `~/Library/Developer`, `~/Library/Android`, or `/private/tmp` from other tools may contain data outside VibeCleaner's focused catalog.
 
@@ -119,7 +122,7 @@ The script builds a universal app for Apple silicon and Intel Macs in `dist/`. I
 
 VibeCleaner does not use `sudo`. It validates paths again before deletion, respects exclusions, and asks for confirmation with the selected item list. Temporary and custom folders may contain valuable files: inspect their paths and contents before selecting them. Close builds and tools that may be using those files. Some caches will need to be downloaded or generated again afterward.
 
-Archives, simulators, test devices, and SDKs are shown so you can understand their size, while Xcode or Android Studio remains responsible for managing them. The app does not sweep all of `~/Library`, `/private/tmp`, or personal documents.
+Archives, regular simulators, recent test devices, SDKs, emulators, and AI models are shown so you can understand their size, while their tools remain responsible for managing them. Old test clones require review; removing one also deletes its installed apps and test state. The app does not sweep all of `~/Library`, `/private/tmp`, or personal documents.
 
 ### Contributing and license
 

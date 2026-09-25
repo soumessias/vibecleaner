@@ -147,3 +147,28 @@
 "Your development folders have been scanned again." = "Your development folders have been scanned again.";
 "Done" = "Done";
 "This location is no longer available or is outside the cleanup catalog." = "This location is no longer available or is outside the cleanup catalog.";
+
+// Storage discovery
+"npx temporary packages" = "npx temporary packages";
+"Packages installed by npx; review if a command is still running." = "Packages installed by npx; review if a command is still running.";
+"Playwright browsers" = "Playwright browsers";
+"Downloaded test browsers; Playwright can install them again." = "Downloaded test browsers; Playwright can install them again.";
+"Puppeteer browsers" = "Puppeteer browsers";
+"Downloaded test browsers; Puppeteer can install them again." = "Downloaded test browsers; Puppeteer can install them again.";
+"Android virtual devices" = "Android virtual devices";
+"Emulators contain apps and settings; manage them in Android Studio." = "Emulators contain apps and settings; manage them in Android Studio.";
+"Ollama models" = "Ollama models";
+"Downloaded AI models; these are not disposable logs." = "Downloaded AI models; these are not disposable logs.";
+"Inactive test clones are review-only; active or recent devices stay protected." = "Inactive test clones are review-only; active or recent devices stay protected.";
+"Project Derived Data" = "Project Derived Data";
+"Generated Xcode data inside project .build folders in Documents." = "Generated Xcode data inside project .build folders in Documents.";
+"Generated project build data; verify no build is running." = "Generated project build data; verify no build is running.";
+"Inactive test clone; removing it also removes its installed apps and test state." = "Inactive test clone; removing it also removes its installed apps and test state.";
+"Recent or active test device; kept under Xcode management." = "Recent or active test device; kept under Xcode management.";
+"Test clones could not be verified; open Xcode to manage them." = "Test clones could not be verified; open Xcode to manage them.";
+"Protected tool data stays untouched; review items require your selection." = "Protected tool data stays untouched; review items require your selection.";
+"Managed storage includes regular simulators, recent test devices, device support, archives, Android SDKs and AI models. Old inactive test clones appear separately for review." = "Managed storage includes regular simulators, recent test devices, device support, archives, Android SDKs and AI models. Old inactive test clones appear separately for review.";
+"Archives and regular simulators stay protected. Selected test clones lose their installed apps and test state." = "Archives and regular simulators stay protected. Selected test clones lose their installed apps and test state.";
+"AI tools" = "AI tools";
+"Hugging Face model cache" = "Hugging Face model cache";
+"Downloaded model snapshots; review if you need them offline." = "Downloaded model snapshots; review if you need them offline.";

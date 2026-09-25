@@ -21,6 +21,7 @@ private enum MenuFilter: String, CaseIterable, Identifiable {
     case xcode
     case android
     case packages
+    case ai
     case temporary
     case others
 
@@ -32,6 +33,7 @@ private enum MenuFilter: String, CaseIterable, Identifiable {
         case .xcode: .xcode
         case .android: .android
         case .packages: .packages
+        case .ai: .ai
         case .temporary: .temporary
         case .others: .custom
         }
@@ -43,6 +45,7 @@ private enum MenuFilter: String, CaseIterable, Identifiable {
         case .xcode: "Xcode"
         case .android: "Android"
         case .packages: "Package managers"
+        case .ai: "AI tools"
         case .temporary: "Temporary"
         case .others: "Others"
         }
@@ -54,6 +57,7 @@ private enum MenuFilter: String, CaseIterable, Identifiable {
         case .xcode: "hammer.fill"
         case .android: "cpu.fill"
         case .packages: "shippingbox.fill"
+        case .ai: "sparkles"
         case .temporary: "doc.text.fill"
         case .others: "ellipsis"
         }
@@ -398,7 +402,7 @@ struct MenuBarView: View {
 
     private var safetyNote: some View {
         Label {
-            VibeText("Managed storage is never cleaned by VibeCleaner.")
+            VibeText("Protected tool data stays untouched; review items require your selection.")
         } icon: {
             Image(systemName: "checkmark.shield")
         }
@@ -714,7 +718,7 @@ private struct SummaryCard: View {
         .alert(VibeStrings.value("About managed storage"), isPresented: $showingManagedInfo) {
             Button(VibeStrings.value("OK"), role: .cancel) { }
         } message: {
-            Text(verbatim: VibeStrings.value("Managed storage includes simulators, test devices, device support, archives and Android SDKs. These are not just logs. VibeCleaner never selects or deletes them."))
+            Text(verbatim: VibeStrings.value("Managed storage includes regular simulators, recent test devices, device support, archives, Android SDKs and AI models. Old inactive test clones appear separately for review."))
         }
     }
 
@@ -824,6 +828,7 @@ private struct CandidateRow: View {
     let candidate: CleanupCandidate
 
     private var symbolName: String {
+        if candidate.origin == .testDevice { return "testtube.2" }
         switch candidate.id {
         case "xcode-test-devices": return "testtube.2"
         case "xcode-simulator-devices": return "iphone"
@@ -835,6 +840,7 @@ private struct CandidateRow: View {
         case .xcode: "hammer.fill"
         case .android: "cpu.fill"
         case .packages: "shippingbox.fill"
+        case .ai: "sparkles"
         case .temporary: "clock.arrow.circlepath"
         case .custom: "folder.fill"
         }
@@ -845,6 +851,7 @@ private struct CandidateRow: View {
         case .xcode: Color.blue
         case .android: Color.green
         case .packages: Color.orange
+        case .ai: Color.purple
         case .temporary: Color.purple
         case .custom: VibePalette.accent
         }

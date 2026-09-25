@@ -11,7 +11,7 @@ Keep the menu bar popover slim (about 440 × 520 points at most on a notebook) a
 - Lead with the VibeCleaner name, supplied logo, a short friendly tagline, Settings, and Scan.
 - Put total measured development storage in a compact summary surface, with separate safe-to-clean, review-before-cleaning, and developer-tool-managed amounts. The review amount opens the review queue. Neither the total nor managed amount is presented as immediately reclaimable.
 - Offer category filters for All, Xcode, Android, Package Managers, Temporary, and Others.
-- Group real scan candidates by tool. Each row shows its actual size, safety, useful detail, and full path when the location is temporary or custom. Managed storage such as simulator devices, XCTest clones, archives, device support and Android SDKs is visible for context but cannot be selected for VibeCleaner cleanup.
+- Group real scan candidates by tool. Each row shows its actual size, safety, useful detail, and full path for discovered locations. Old, shut down XCTest clones and project Derived Data require individual review. Regular simulators, recent or active test devices, archives, device support, Android SDKs and AI models remain visible but cannot be selected.
 - Keep a persistent, clearly labeled primary button for cleaning the selected items. Make it large enough to read and press, show the exact selected total, and keep the existing confirmation step. Animate the broom and a single light sweep only while cleanup is running; a press has a short tactile response. Honor Reduce Motion.
 - Keep the last-scan time, soumessias link, and Quit action findable in the footer.
 
@@ -25,7 +25,9 @@ Cyan identifies VibeCleaner, selected filters, and safe cleanup. The primary act
 
 - Show only measured scan results; never use artwork values as live data.
 - Keep safe cache totals separate from review-only candidates.
-- Keep monitored-but-managed storage separate from both. It includes more than logs: simulator data, test devices, device support, archives, and Android SDKs. It is never selectable or passed to cleanup; explain this from the summary.
+- Keep monitored-but-managed storage separate from both. It includes more than logs: regular simulator data, recent or active test devices, device support, archives, Android SDKs, emulators, and AI models. It is never selectable or passed to cleanup; explain this from the summary.
+- Allow old, shut down XCTest clones only as unchecked review candidates. Revalidate with `simctl` at cleanup and use `simctl delete`, so Xcode controls removal. Preserve the last 24 hours of test devices.
+- Discover generated Derived Data directly under project `.build` folders in Documents, without sweeping entire `.build` folders or touching adjacent `.xcarchive` releases.
 - Leave review candidates unchecked by default. Keep their path visible before cleanup.
 - Preserve archives, active simulators, user documents, and unknown locations.
 - Preserve selection, filtering, scanning, cleanup confirmation, warnings, empty states, Settings, and Quit.

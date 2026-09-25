@@ -25,6 +25,7 @@ enum CleanupGroup: String, CaseIterable, Codable, Sendable {
     case xcode
     case android
     case packages
+    case ai
     case temporary
     case custom
 
@@ -33,6 +34,7 @@ enum CleanupGroup: String, CaseIterable, Codable, Sendable {
         case .xcode: "Xcode"
         case .android: "Android"
         case .packages: "Package managers"
+        case .ai: "AI tools"
         case .temporary: "Temporary builds"
         case .custom: "Custom locations"
         }
@@ -43,6 +45,8 @@ enum CandidateOrigin: String, Codable, Sendable {
     case catalog
     case temporary
     case custom
+    case testDevice
+    case projectDerivedData
 }
 
 struct CleanupCandidate: Identifiable, Hashable, Codable, Sendable {

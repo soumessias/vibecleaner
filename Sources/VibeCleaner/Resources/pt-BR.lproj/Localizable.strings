@@ -147,3 +147,28 @@
 "Your development folders have been scanned again." = "As pastas de desenvolvimento foram analisadas novamente.";
 "Done" = "Concluir";
 "This location is no longer available or is outside the cleanup catalog." = "Este local não está mais disponível ou está fora do catálogo de limpeza.";
+
+// Storage discovery
+"npx temporary packages" = "Pacotes temporários do npx";
+"Packages installed by npx; review if a command is still running." = "Pacotes instalados pelo npx; confira se algum comando ainda está em execução.";
+"Playwright browsers" = "Navegadores do Playwright";
+"Downloaded test browsers; Playwright can install them again." = "Navegadores de teste baixados; o Playwright pode instalá-los novamente.";
+"Puppeteer browsers" = "Navegadores do Puppeteer";
+"Downloaded test browsers; Puppeteer can install them again." = "Navegadores de teste baixados; o Puppeteer pode instalá-los novamente.";
+"Android virtual devices" = "Dispositivos virtuais Android";
+"Emulators contain apps and settings; manage them in Android Studio." = "Os emuladores contêm apps e ajustes; gerencie-os no Android Studio.";
+"Ollama models" = "Modelos do Ollama";
+"Downloaded AI models; these are not disposable logs." = "Modelos de IA baixados; não são logs descartáveis.";
+"Inactive test clones are review-only; active or recent devices stay protected." = "Clones de teste inativos exigem revisão; dispositivos ativos ou recentes ficam protegidos.";
+"Project Derived Data" = "Derived Data dos projetos";
+"Generated Xcode data inside project .build folders in Documents." = "Dados gerados pelo Xcode dentro de pastas .build de projetos em Documentos.";
+"Generated project build data; verify no build is running." = "Dados de build gerados pelo projeto; confirme que não há build em execução.";
+"Inactive test clone; removing it also removes its installed apps and test state." = "Clone de teste inativo; a remoção também apaga seus apps instalados e o estado dos testes.";
+"Recent or active test device; kept under Xcode management." = "Dispositivo de teste recente ou ativo; permanece sob o controle do Xcode.";
+"Test clones could not be verified; open Xcode to manage them." = "Não foi possível verificar os clones de teste; gerencie-os no Xcode.";
+"Protected tool data stays untouched; review items require your selection." = "Dados protegidos das ferramentas permanecem intactos; itens de revisão precisam da sua seleção.";
+"Managed storage includes regular simulators, recent test devices, device support, archives, Android SDKs and AI models. Old inactive test clones appear separately for review." = "O armazenamento gerenciado inclui simuladores comuns, dispositivos de teste recentes, suporte a dispositivos, archives, SDKs Android e modelos de IA. Clones de teste antigos e inativos aparecem separadamente para revisão.";
+"Archives and regular simulators stay protected. Selected test clones lose their installed apps and test state." = "Archives e simuladores comuns continuam protegidos. Clones de teste selecionados perderão seus apps instalados e o estado dos testes.";
+"AI tools" = "Ferramentas de IA";
+"Hugging Face model cache" = "Cache de modelos do Hugging Face";
+"Downloaded model snapshots; review if you need them offline." = "Modelos baixados; revise antes de apagar se precisar deles offline.";
