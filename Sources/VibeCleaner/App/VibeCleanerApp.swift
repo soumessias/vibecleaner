@@ -19,6 +19,7 @@ import SwiftUI
 @MainActor
 struct VibeCleanerApp: App {
     @NSApplicationDelegateAdaptor(MenuBarController.self) private var menuBarController
+    @State private var isSystemMenuItemInserted = false
     @StateObject private var store: CleanerStore
     @StateObject private var loginItemManager: LoginItemManager
 
@@ -31,6 +32,10 @@ struct VibeCleanerApp: App {
     }
 
     var body: some Scene {
+        MenuBarExtra("VibeCleaner", isInserted: $isSystemMenuItemInserted) {
+            EmptyView()
+        }
+
         Settings {
             SettingsRootView()
                 .environmentObject(store)
