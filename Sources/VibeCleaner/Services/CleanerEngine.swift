@@ -41,6 +41,19 @@ enum CleanerEngine {
         let isAvailable: Bool
     }
 
+    private struct SimulatorDevice {
+        let id: UUID
+        let name: String
+        let path: URL
+        let state: String
+        let isAvailable: Bool
+        let runtimeVersion: String?
+    }
+
+    private static let simulatorRoot = FileManager.default.homeDirectoryForCurrentUser
+        .appending(path: "Library/Developer/CoreSimulator/Devices", directoryHint: .isDirectory)
+        .standardizedFileURL
+
     private static let testDeviceRoot = FileManager.default.homeDirectoryForCurrentUser
         .appending(path: "Library/Developer/XCTestDevices", directoryHint: .isDirectory)
         .standardizedFileURL
@@ -151,14 +164,6 @@ enum CleanerEngine {
             relativePath: ".pub-cache"
         ),
         CatalogEntry(
-            id: "xcode-simulator-devices",
-            nameKey: "Simulator devices",
-            detailKey: "Installed simulators and their app data; manage them in Xcode.",
-            group: .xcode,
-            safety: .managed,
-            relativePath: "Library/Developer/CoreSimulator/Devices"
-        ),
-        CatalogEntry(
             id: "xcode-device-support",
             nameKey: "iOS device support",
             detailKey: "Device symbols and support files; keep versions you still debug.",
@@ -209,7 +214,7 @@ enum CleanerEngine {
     ]
 
     static var cleanerIDs: [String] {
-        catalog.map(\.id) + ["xcode-test-devices", "project-derived-data", "temporary-builds"]
+        catalog.map(\.id) + ["xcode-simulator-devices", "xcode-test-devices", "project-derived-data", "temporary-builds"]
     }
 
     static func defaultEnabledIDs() -> Set<String> {
@@ -226,14 +231,22 @@ enum CleanerEngine {
             "\(home)/Library", "\(home)/Documents", "\(home)/Desktop", "\(home)/Downloads",
             "\(home)/Pictures", "\(home)/Movies", "\(home)/Music"
         ]
-        return !protectedRoots.contains { root in
+        guard !protectedRoots.contains(where: { root in
             url.path == root || (root != "/" && isSameOrDescendant(url.path, of: root))
-        }
+        }) else { return false }
+        // Custom cleaners must not bypass the simulator-specific eligibility checks.
+        return !isSameOrDescendant(url.path, of: simulatorRoot.path)
+            && !isSameOrDescendant(simulatorRoot.path, of: url.path)
     }
 
     static func cleanerSettings() -> [CleanerSetting] {
         let builtIn = catalog.map { CleanerSetting(id: $0.id, nameKey: $0.nameKey, detailKey: $0.detailKey, group: $0.group) }
         return builtIn + [CleanerSetting(
+            id: "xcode-simulator-devices",
+            nameKey: "Simulator devices",
+            detailKey: "Older iOS simulators can be reviewed individually; current and active devices stay protected.",
+            group: .xcode
+        ), CleanerSetting(
             id: "xcode-test-devices",
             nameKey: "Xcode test devices",
             detailKey: "Inactive test clones are review-only; active or recent devices stay protected.",
@@ -276,6 +289,10 @@ enum CleanerEngine {
                 path: url.path,
                 bytes: measured
             ))
+        }
+
+        if enabledIDs.contains("xcode-simulator-devices") {
+            candidates += scanSimulatorDevices(excluded: normalizedExclusions, warnings: &warnings)
         }
 
         if enabledIDs.contains("xcode-test-devices") {
@@ -382,7 +399,8 @@ enum CleanerEngine {
             guard candidate.safety != .managed,
                   isAuthorized(candidate, normalizedCustomPaths: normalizedCustomPaths),
                   !isExcluded(url.path, by: exclusions),
-                  !(candidate.origin == .testDevice && containsExcludedDescendant(url.path, exclusions: exclusions)),
+                  !([CandidateOrigin.testDevice, .simulatorDevice].contains(candidate.origin)
+                    && containsExcludedDescendant(url.path, exclusions: exclusions)),
                   isInspectableDirectory(url) else {
                 problems.append(CleanProblem(path: candidate.path, message: "This location is no longer available or is outside the cleanup catalog."))
                 completedCount += 1
@@ -392,6 +410,10 @@ enum CleanerEngine {
             do {
                 if candidate.origin == .testDevice {
                     try deleteTestDevice(candidate)
+                    removedBytes += candidate.bytes
+                    publish(currentID: candidate.id)
+                } else if candidate.origin == .simulatorDevice {
+                    try deleteSimulatorDevice(candidate)
                     removedBytes += candidate.bytes
                     publish(currentID: candidate.id)
                 } else {
@@ -428,8 +450,136 @@ enum CleanerEngine {
                 && candidate.safety == .review
         case .testDevice:
             return isReviewableTestDevice(candidate)
+        case .simulatorDevice:
+            return isReviewableSimulatorDevice(candidate)
         case .projectDerivedData:
             return candidate.safety == .review && isAllowedProjectDerivedData(candidate.url)
+        }
+    }
+
+    private static func scanSimulatorDevices(excluded: [String], warnings: inout [String]) -> [CleanupCandidate] {
+        guard isInspectableDirectory(simulatorRoot), !isExcluded(simulatorRoot.path, by: excluded) else { return [] }
+        guard let listing = listedSimulatorDevices() else {
+            let bytes = directorySize(at: simulatorRoot, excluded: excluded, warnings: &warnings)
+            guard bytes > 0 else { return [] }
+            return [CleanupCandidate(
+                id: "xcode-simulator-devices-unavailable",
+                nameKey: "Simulator devices",
+                detailKey: "Simulators could not be verified; manage them in Xcode.",
+                group: .xcode,
+                safety: .managed,
+                origin: .simulatorDevice,
+                path: simulatorRoot.path,
+                bytes: bytes
+            )]
+        }
+
+        return listing.devices.compactMap { device in
+            guard isInspectableDirectory(device.path), !isExcluded(device.path.path, by: excluded) else { return nil }
+            let bytes = directorySize(at: device.path, excluded: excluded, warnings: &warnings)
+            guard bytes > 0 else { return nil }
+            let canReview = isOlderInactiveSimulator(device, latestVersion: listing.latestVersion)
+                && !containsExcludedDescendant(device.path.path, exclusions: excluded)
+            let versionLabel = device.runtimeVersion.map { "iOS \($0)" } ?? "Simulator"
+            return CleanupCandidate(
+                id: "simulator-device:\(device.id.uuidString)",
+                nameKey: "\(device.name) · \(versionLabel) · \(device.id.uuidString.prefix(8))",
+                detailKey: canReview
+                    ? "Older iOS simulator; deleting it removes its installed apps and device data, but keeps the iOS runtime."
+                    : "Current, active or unverified simulator; manage it in Xcode.",
+                group: .xcode,
+                safety: canReview ? .review : .managed,
+                origin: .simulatorDevice,
+                path: device.path.path,
+                bytes: bytes
+            )
+        }
+    }
+
+    private static func listedSimulatorDevices() -> (devices: [SimulatorDevice], latestVersion: String?)? {
+        guard let runtimesJSON = simctlJSON(["simctl", "list", "runtimes", "-j"]),
+              let runtimes = runtimesJSON["runtimes"] as? [[String: Any]],
+              let devicesJSON = simctlJSON(["simctl", "list", "devices", "-j"]),
+              let groups = devicesJSON["devices"] as? [String: [[String: Any]]] else { return nil }
+
+        var versions: [String: String] = [:]
+        for runtime in runtimes {
+            guard let identifier = runtime["identifier"] as? String,
+                  identifier.hasPrefix("com.apple.CoreSimulator.SimRuntime.iOS-"),
+                  runtime["isAvailable"] as? Bool == true,
+                  let version = runtime["version"] as? String else { continue }
+            versions[identifier] = version
+        }
+        let latestVersion = versions.values.max { $0.compare($1, options: .numeric) == .orderedAscending }
+        let devices = groups.flatMap { runtime, records in
+            records.compactMap { record -> SimulatorDevice? in
+                guard let idString = record["udid"] as? String,
+                      let id = UUID(uuidString: idString),
+                      let name = record["name"] as? String,
+                      let state = record["state"] as? String,
+                      let isAvailable = record["isAvailable"] as? Bool,
+                      let dataPath = record["dataPath"] as? String else { return nil }
+                let path = simulatorRoot.appending(path: id.uuidString, directoryHint: .isDirectory).standardizedFileURL
+                guard dataPath == path.appending(path: "data").path else { return nil }
+                return SimulatorDevice(
+                    id: id, name: name, path: path, state: state,
+                    isAvailable: isAvailable, runtimeVersion: versions[runtime]
+                )
+            }
+        }
+        return (devices, latestVersion)
+    }
+
+    private static func simctlJSON(_ arguments: [String]) -> [String: Any]? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = arguments
+        let output = Pipe()
+        process.standardOutput = output
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+            let data = output.fileHandleForReading.readDataToEndOfFile()
+            process.waitUntilExit()
+            guard process.terminationStatus == 0 else { return nil }
+            return try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        } catch {
+            return nil
+        }
+    }
+
+    private static func isOlderInactiveSimulator(_ device: SimulatorDevice, latestVersion: String?) -> Bool {
+        guard let version = device.runtimeVersion, let latestVersion else { return false }
+        return device.isAvailable && device.state == "Shutdown"
+            && version.compare(latestVersion, options: .numeric) == .orderedAscending
+    }
+
+    private static func isReviewableSimulatorDevice(_ candidate: CleanupCandidate) -> Bool {
+        guard candidate.safety == .review,
+              let idString = candidate.id.split(separator: ":").last,
+              let id = UUID(uuidString: String(idString)),
+              candidate.path == simulatorRoot.appending(path: id.uuidString).standardizedFileURL.path,
+              let listing = listedSimulatorDevices(),
+              let device = listing.devices.first(where: { $0.id == id }),
+              isInspectableDirectory(device.path) else { return false }
+        return isOlderInactiveSimulator(device, latestVersion: listing.latestVersion)
+    }
+
+    private static func deleteSimulatorDevice(_ candidate: CleanupCandidate) throws {
+        guard isReviewableSimulatorDevice(candidate),
+              let idString = candidate.id.split(separator: ":").last,
+              let id = UUID(uuidString: String(idString)) else {
+            throw NSError(domain: "VibeCleaner", code: 3, userInfo: [NSLocalizedDescriptionKey: "The simulator changed since the scan. Scan again before cleaning."])
+        }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = ["simctl", "delete", id.uuidString]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw NSError(domain: "VibeCleaner", code: 4, userInfo: [NSLocalizedDescriptionKey: "Xcode could not remove this simulator. Close Simulator and try again."])
         }
     }
 

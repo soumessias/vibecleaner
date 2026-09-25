@@ -172,3 +172,9 @@
 "AI tools" = "AI tools";
 "Hugging Face model cache" = "Hugging Face model cache";
 "Downloaded model snapshots; review if you need them offline." = "Downloaded model snapshots; review if you need them offline.";
+"Older iOS simulators can be reviewed individually; current and active devices stay protected." = "Older iOS simulators can be reviewed individually; current and active devices stay protected.";
+"Simulators could not be verified; manage them in Xcode." = "Simulators could not be verified; manage them in Xcode.";
+"Older iOS simulator; deleting it removes its installed apps and device data, but keeps the iOS runtime." = "Older iOS simulator; deleting it removes its installed apps and device data, but keeps the iOS runtime.";
+"Current, active or unverified simulator; manage it in Xcode." = "Current, active or unverified simulator; manage it in Xcode.";
+"Managed storage includes current or active simulators, recent test devices, device support, archives, Android SDKs and AI models. Older inactive iOS simulators and test clones appear separately for review." = "Managed storage includes current or active simulators, recent test devices, device support, archives, Android SDKs and AI models. Older inactive iOS simulators and test clones appear separately for review.";
+"Archives and current or active simulators stay protected. Selected older simulators and test clones lose their installed apps and device data." = "Archives and current or active simulators stay protected. Selected older simulators and test clones lose their installed apps and device data.";

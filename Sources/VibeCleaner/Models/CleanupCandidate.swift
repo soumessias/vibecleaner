@@ -46,6 +46,7 @@ enum CandidateOrigin: String, Codable, Sendable {
     case temporary
     case custom
     case testDevice
+    case simulatorDevice
     case projectDerivedData
 }
 

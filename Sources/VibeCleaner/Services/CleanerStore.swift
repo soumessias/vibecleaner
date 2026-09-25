@@ -39,7 +39,7 @@ final class CleanerStore: ObservableObject {
     private let defaults = UserDefaults.standard
     private let candidatesKey = "cachedCandidates"
     private let hasSelectionKey = "hasSavedSelection"
-    private let scanCatalogVersion = 4
+    private let scanCatalogVersion = 5
     private var cleanupProgressSequence = 0
 
     private init() {

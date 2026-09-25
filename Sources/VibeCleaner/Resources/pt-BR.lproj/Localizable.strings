@@ -172,3 +172,9 @@
 "AI tools" = "Ferramentas de IA";
 "Hugging Face model cache" = "Cache de modelos do Hugging Face";
 "Downloaded model snapshots; review if you need them offline." = "Modelos baixados; revise antes de apagar se precisar deles offline.";
+"Older iOS simulators can be reviewed individually; current and active devices stay protected." = "Simuladores de iOS antigos podem ser revisados individualmente; os atuais e ativos ficam protegidos.";
+"Simulators could not be verified; manage them in Xcode." = "Não foi possível verificar os simuladores; gerencie-os no Xcode.";
+"Older iOS simulator; deleting it removes its installed apps and device data, but keeps the iOS runtime." = "Simulador de iOS antigo; a exclusão remove os apps e dados do dispositivo, mas mantém o runtime do iOS.";
+"Current, active or unverified simulator; manage it in Xcode." = "Simulador atual, ativo ou não verificado; gerencie-o no Xcode.";
+"Managed storage includes current or active simulators, recent test devices, device support, archives, Android SDKs and AI models. Older inactive iOS simulators and test clones appear separately for review." = "O armazenamento gerenciado inclui simuladores atuais ou ativos, dispositivos de teste recentes, suporte de dispositivos, archives, SDKs Android e modelos de IA. Simuladores de iOS antigos e desligados e clones de teste aparecem separadamente para revisão.";
+"Archives and current or active simulators stay protected. Selected older simulators and test clones lose their installed apps and device data." = "Archives e simuladores atuais ou ativos ficam protegidos. Simuladores antigos e clones de teste selecionados perdem os apps instalados e os dados do dispositivo.";

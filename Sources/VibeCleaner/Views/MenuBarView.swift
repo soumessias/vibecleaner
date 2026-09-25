@@ -718,7 +718,7 @@ private struct SummaryCard: View {
         .alert(VibeStrings.value("About managed storage"), isPresented: $showingManagedInfo) {
             Button(VibeStrings.value("OK"), role: .cancel) { }
         } message: {
-            Text(verbatim: VibeStrings.value("Managed storage includes regular simulators, recent test devices, device support, archives, Android SDKs and AI models. Old inactive test clones appear separately for review."))
+            Text(verbatim: VibeStrings.value("Managed storage includes current or active simulators, recent test devices, device support, archives, Android SDKs and AI models. Older inactive iOS simulators and test clones appear separately for review."))
         }
     }
 
@@ -829,6 +829,7 @@ private struct CandidateRow: View {
 
     private var symbolName: String {
         if candidate.origin == .testDevice { return "testtube.2" }
+        if candidate.origin == .simulatorDevice { return "iphone" }
         switch candidate.id {
         case "xcode-test-devices": return "testtube.2"
         case "xcode-simulator-devices": return "iphone"

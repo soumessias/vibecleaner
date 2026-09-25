@@ -38,7 +38,7 @@ struct CleanupConfirmationView: View {
     private var touchesBuildCaches: Bool {
         candidates.contains {
             ["xcode-derived-data", "xcode-module-cache", "xcode-cache", "gradle-cache"].contains($0.id)
-                || $0.origin == .testDevice || $0.origin == .projectDerivedData
+                || $0.origin == .testDevice || $0.origin == .simulatorDevice || $0.origin == .projectDerivedData
         }
     }
 
@@ -104,7 +104,7 @@ struct CleanupConfirmationView: View {
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                 }
-                VibeText("Archives and regular simulators stay protected. Selected test clones lose their installed apps and test state.")
+                VibeText("Archives and current or active simulators stay protected. Selected older simulators and test clones lose their installed apps and device data.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

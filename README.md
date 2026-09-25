@@ -48,8 +48,8 @@ Capturas reais no macOS. Os valores variam conforme os arquivos de cada Mac. / R
 | Grupo | O que significa | Limpeza pelo VibeCleaner |
 | --- | --- | --- |
 | **Pronto para limpar** | Caches conhecidos e recriáveis, como Derived Data do Xcode e cache do Gradle. | Selecionados por padrão; você pode desmarcar. |
-| **Revisar** | Builds temporários, Derived Data em projetos, clones antigos e desligados de teste, alguns caches e pastas adicionadas por você. | Desmarcados por padrão; confira o caminho antes de selecionar. Clones de teste são removidos pelo `simctl` do Xcode. |
-| **Gerenciado pelas ferramentas** | Simuladores comuns, dispositivos de teste recentes ou ativos, archives, suporte de dispositivos, SDK e emuladores Android e modelos de IA. | Somente consulta; o app não seleciona nem apaga. |
+| **Revisar** | Builds temporários, Derived Data em projetos, simuladores de versões antigas do iOS que estão desligados, clones antigos de teste, alguns caches e pastas adicionadas por você. | Desmarcados por padrão; confira cada dispositivo e caminho antes de selecionar. Simuladores e clones de teste são removidos pelo `simctl` do Xcode. |
+| **Gerenciado pelas ferramentas** | Simuladores da versão mais recente do iOS instalada, dispositivos ativos ou não verificados, archives, suporte de dispositivos, SDK e emuladores Android e modelos de IA. | Somente consulta; o app não seleciona nem apaga. |
 
 O total de **armazenamento de desenvolvimento encontrado** soma os três grupos. Ele **não** é a promessa de espaço que o botão Limpar vai liberar. O valor do botão corresponde apenas aos itens selecionados para limpeza. O número na barra de menus representa o espaço **pronto para limpar**. Tamanhos de `~/Library/Developer`, `~/Library/Android` ou `/private/tmp` medidos por outras ferramentas podem incluir dados que ficam fora do catálogo do VibeCleaner.
 
@@ -70,7 +70,7 @@ O script cria um app universal para Macs com Apple silicon e Intel em `dist/`. A
 
 O VibeCleaner não usa `sudo`. Ele valida novamente os caminhos antes de apagar, respeita exclusões e pede confirmação com a lista de itens selecionados. Pastas temporárias e personalizadas podem conter arquivos importantes: confira o caminho e o conteúdo antes de marcá-las. Feche builds e ferramentas que estejam usando esses arquivos. Após a limpeza, alguns caches terão de ser baixados ou gerados novamente.
 
-Archives, simuladores comuns, dispositivos de teste recentes, SDKs, emuladores e modelos de IA aparecem para você entender onde está o espaço, mas continuam sob o controle das ferramentas. Clones de teste antigos só podem ser selecionados após revisão e perdem os apps e o estado de testes ao serem removidos. O app também não faz uma limpeza genérica de `~/Library`, `/private/tmp` ou documentos pessoais.
+Archives, simuladores atuais ou ativos, dispositivos de teste recentes, SDKs, emuladores e modelos de IA aparecem para você entender onde está o espaço, mas continuam sob o controle das ferramentas. Simuladores desligados de versões antigas do iOS e clones de teste antigos só podem ser selecionados após revisão. Removê-los apaga os apps e dados desses dispositivos; o runtime do iOS continua instalado no Xcode. O app também não faz uma limpeza genérica de `~/Library`, `/private/tmp` ou documentos pessoais.
 
 ### Contribuir e licença
 
@@ -100,8 +100,8 @@ VibeCleaner is a lightweight native macOS menu bar app. It measures developer ca
 | Group | Meaning | Cleanup in VibeCleaner |
 | --- | --- | --- |
 | **Ready to clean** | Known regenerable caches, such as Xcode Derived Data and Gradle cache. | Selected by default; you can deselect them. |
-| **Review** | Temporary builds, project Derived Data, old shut down test clones, some caches, and folders you add. | Deselected by default; inspect each path before selecting it. Test clones are removed through Xcode's `simctl`. |
-| **Managed by tools** | Regular simulators, recent or active test devices, archives, device support, Android SDK and emulators, and AI models. | View only; the app never selects or deletes them. |
+| **Review** | Temporary builds, project Derived Data, shut down simulators on older iOS versions, old test clones, some caches, and folders you add. | Deselected by default; inspect each device and path before selecting it. Simulators and test clones are removed through Xcode's `simctl`. |
+| **Managed by tools** | Simulators on the newest installed iOS version, active or unverified devices, archives, device support, Android SDK and emulators, and AI models. | View only; the app never selects or deletes them. |
 
 The **development storage found** total includes all three groups. It is **not** the amount the Clean button will recover. The button shows only the selected cleanup items. The menu bar value shows **ready-to-clean** space. Totals for `~/Library/Developer`, `~/Library/Android`, or `/private/tmp` from other tools may contain data outside VibeCleaner's focused catalog.
 
@@ -122,7 +122,7 @@ The script builds a universal app for Apple silicon and Intel Macs in `dist/`. I
 
 VibeCleaner does not use `sudo`. It validates paths again before deletion, respects exclusions, and asks for confirmation with the selected item list. Temporary and custom folders may contain valuable files: inspect their paths and contents before selecting them. Close builds and tools that may be using those files. Some caches will need to be downloaded or generated again afterward.
 
-Archives, regular simulators, recent test devices, SDKs, emulators, and AI models are shown so you can understand their size, while their tools remain responsible for managing them. Old test clones require review; removing one also deletes its installed apps and test state. The app does not sweep all of `~/Library`, `/private/tmp`, or personal documents.
+Archives, current or active simulators, recent test devices, SDKs, emulators, and AI models are shown so you can understand their size, while their tools remain responsible for managing them. Shut down simulators on older iOS versions and old test clones require review. Removing one deletes its installed apps and device data; it does not uninstall the iOS runtime from Xcode. The app does not sweep all of `~/Library`, `/private/tmp`, or personal documents.
 
 ### Contributing and license
 
